@@ -44,7 +44,60 @@ const meta = {
       },
     },
   },
-} as Meta<typeof TextArea>;
+} satisfies Meta;
 
 export default meta;
 type Story = StoryObj<typeof TextArea>;
+
+export const Default: Story = {};
+
+export const WithCount: Story = {
+  args: {
+    maxLength: 140,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const textArea = canvas.getByRole('textbox');
+    const count = canvas.getByTestId('length');
+
+    const inputValue = 'Hello,World!';
+
+    await userEvent.type(textArea, inputValue);
+
+    await expect(count).toHaveTextContent(inputValue.length.toString());
+  },
+};
+
+export const LengthTooLong: Story = {
+  args: {
+    maxLength: 140,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const textArea = canvas.getByRole('textbox');
+    const count = canvas.getByTestId('length');
+
+    const inputValue = 'Y' + 'o'.repeat(140) + '!';
+
+    await userEvent.type(textArea, inputValue);
+
+    await expect(count).toHaveTextContent(inputValue.length.toString());
+    await expect(textArea).toHaveAttribute('aria-invalid', 'true');
+    await expect(textArea).toHaveClass('ring-danger-500');
+    await expect(count).toHaveStyle({ color: 'rgb(237, 70, 86)' });
+  },
+};
+
+export const Disabled: Story = {
+  args: {
+    disabled: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const textArea = canvas.getByRole('textbox');
+
+    await expect(textArea).toBeDisabled();
+    await userEvent.type(textArea, 'Hello World');
+    await expect(textArea).toHaveValue('');
+  },
+};
